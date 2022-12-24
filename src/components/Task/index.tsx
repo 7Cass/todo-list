@@ -1,5 +1,6 @@
 import styles from './Task.module.css'
 import { ClipboardText, Circle, CheckCircle, Trash } from 'phosphor-react'
+import { Dispatch, SetStateAction } from 'react';
 
 interface Task {
     id: string;
@@ -9,20 +10,45 @@ interface Task {
 
 interface TaskProps {
     tasks: Task[]
+    setTasks: Dispatch<SetStateAction<Task[]>>
 }
 
-export function Task({ tasks }: TaskProps) {
+export function Task({ tasks, setTasks }: TaskProps) {
+
+    function getFinishedTasks(): string {
+        const finished = tasks.filter((task) => task.isFinished)
+
+        return `${finished.length} de ${tasks.length}`
+    }
+
+    function deleteTask(taskId: string): void {
+        const tasksWithoutDeletedOne = tasks.filter(task => task.id !== taskId)
+        
+        setTasks(tasksWithoutDeletedOne)
+    }
+
+    function toggleFinishedTask(taskId: string): void {
+        const selectedTaskIndex = tasks.findIndex(task => task.id === taskId)
+
+        const updatedTasks = [...tasks]
+        updatedTasks[selectedTaskIndex].isFinished = !updatedTasks[selectedTaskIndex].isFinished
+
+        
+        setTasks(updatedTasks)
+        console.log(tasks);
+    }
+
     console.log(tasks);
     return (
         <div className={styles.container}>
             <header className={styles.header}>
                 <div className={styles.createdTasks}>
                     <strong>Tarefas Criadas</strong>
-                    <p>5</p>
+                    <p>{tasks.length}</p>
                 </div>
                 <div className={styles.finishedTasks}>
                     <strong>Concluídas</strong>
-                    <p>2 de 5</p>
+                    <p>{getFinishedTasks()}</p>
                 </div>
             </header>
 
@@ -38,12 +64,12 @@ export function Task({ tasks }: TaskProps) {
                     {tasks.map(({id, title, isFinished}) => {
                         return (
                             <div className={styles.task} key={id}>
-                                {isFinished ? <CheckCircle className={styles.finished} size={24} weight="fill"/> : <Circle className={styles.notFinished} size={24}/>}
+                                {isFinished ? <CheckCircle onClick={() => toggleFinishedTask(id)} className={styles.finished} size={24} weight="fill"/> : <Circle onClick={() => toggleFinishedTask(id)} className={styles.notFinished} size={24}/>}
                                 <p style={{
                                     textDecoration: isFinished ? 'line-through' : 'none',
                                     color: isFinished ? 'var(--gray-300)' : 'inherit'
                                 }}>{title}</p>
-                                <Trash className={styles.trash} size={20} />
+                                <Trash className={styles.trash} size={20} onClick={() => deleteTask(id)}/>
                             </div>
                         )
                     })}
